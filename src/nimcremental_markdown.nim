@@ -17,8 +17,8 @@ type BlockKind* = enum
 type Block* = ref object
   kind*: BlockKind
   children*: seq[Block]
-  line*: int
-  column*: int
+  lineStart*: int
+  lineEnd*: int
   offset*: int
   length*: int
   open*: bool
@@ -26,18 +26,18 @@ type Block* = ref object
 
 type Document* = ref object
   children*: seq[Block]
-  lastBlock*: Block
 
 type Parser* = ref object
   input*: string
   pos*: int
   line*: int
   doc*: Document
+  lastBlock*: Block
+
 
 proc newParser*(): Parser =
-  var doc = Document(children: @[], lastBlock: nil)
+  var doc = Document(children: @[])
   Parser(input: "", pos: 0, line: 0, doc: doc)
-
 
 proc parseBlockContinuation*(parser: var Parser) =
   echo "parseBlockContinuation"
@@ -71,30 +71,30 @@ proc getLines*(parser: var Parser): seq[LineResult] =
     if newline > 0:
       if i != parser.pos:
         result.add(newLineResult(parser.pos, i - 1, false))
-        echo parser.input[parser.pos..i - 1].debugString
+        # echo parser.input[parser.pos..i - 1].debugString
       result.add(newLineResult(i, i + newline - 1, true))
-      echo parser.input[i..i + newline - 1].debugString
+      # echo parser.input[i..i + newline - 1].debugString
       parser.pos = i + newline
     i += newline + 1
   
   if parser.pos != i:
     result.add(newLineResult(parser.pos, parser.input.len - 1, false))
-    echo parser.input[parser.pos..parser.input.len - 1].debugString
+    # echo parser.input[parser.pos..parser.input.len - 1].debugString
     parser.pos = parser.input.len
 
 proc push*(parser: var Parser, input: string) =
   parser.input.add(input)
   # echo input.debugString
 
-  echo parser.getLines()
+  let lines = parser.getLines()
 
 
-  # parser.parseBlockContinuation()
-  # parser.parseBlockStart()
+  parser.parseBlockContinuation()
+  parser.parseBlockStart()
 
 
 when isMainModule:
   var p = newParser()
   p.push("# Hell")
-  p.push("\nit works")
+  p.push("o\nit works")
   # echo(p.input)
