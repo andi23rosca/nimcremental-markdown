@@ -57,21 +57,28 @@ proc isNewlineToken*(parser: var Parser, i: int): int =
     return 1
   return 0
 
-proc getLines*(parser: var Parser): seq[(int, int)] =
+type LineResult = object
+  start: int
+  finish: int
+  newline: bool
+proc newLineResult*(start: int, finish: int, newline: bool): LineResult =
+  LineResult(start: start, finish: finish, newline: newline)
+
+proc getLines*(parser: var Parser): seq[LineResult] =
   var i = parser.pos
   while i < parser.input.len:
     var newline = isNewlineToken(parser, i)
     if newline > 0:
       if i != parser.pos:
-        result.add((parser.pos, i - 1))
+        result.add(newLineResult(parser.pos, i - 1, false))
         echo parser.input[parser.pos..i - 1].debugString
-      result.add((i, i + newline - 1))
+      result.add(newLineResult(i, i + newline - 1, true))
       echo parser.input[i..i + newline - 1].debugString
       parser.pos = i + newline
     i += newline + 1
   
   if parser.pos != i:
-    result.add((parser.pos, parser.input.len - 1))
+    result.add(newLineResult(parser.pos, parser.input.len - 1, false))
     echo parser.input[parser.pos..parser.input.len - 1].debugString
     parser.pos = parser.input.len
 
@@ -89,5 +96,5 @@ proc push*(parser: var Parser, input: string) =
 when isMainModule:
   var p = newParser()
   p.push("# Hell")
-  p.push("\nyes\r\nit\rworks\n")
+  p.push("\nit works")
   # echo(p.input)
