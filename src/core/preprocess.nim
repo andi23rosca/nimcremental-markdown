@@ -33,6 +33,8 @@ proc printChunks*(preprocessor: Preprocessor) =
     case chunk.kind:
     of codeCarriageReturn:
       kind = "CR"
+    of codeCarriageReturnLineFeed:
+      kind = "CRLF"
     of codeLineFeed:
       kind = "LF"
     of codeHorizontalTab:
@@ -55,6 +57,8 @@ proc pushChunk*(preprocessor: var Preprocessor, kind: Rune, offset: int) =
 proc preprocess*(p: var Preprocessor, input: string, finish: bool = false) =
   p.input = p.input & input
   let runesInput = input.toRunes()
+  p.textOffset = p.offset
+
   for partialIndex, r in runesInput:
     let i = p.offset + partialIndex
 
